@@ -36,12 +36,34 @@ void ControlSystem::updateFree(float dt) {
 	
 	Camera& camera = ECS.getComponentInArray<Camera>(ECS.main_camera);
     Transform& transform = ECS.getComponentFromEntity<Transform>(camera.owner);
-	
+	float move_speed_dt = move_speed_ * dt;
+	float turn_speed_dt = turn_speed_ * dt;
 	//rotate camera if clicking the mouse - update camera.forward
 	if (input[GLFW_MOUSE_BUTTON_LEFT]) {
 		
 		//TODO:
 		// - rotate camera front vector according to mouse._delta_x and mouse_.delta_y
+		lm::mat4 R_yaw, R_pitch;
+		R_yaw.makeRotationMatrix(mouse_.delta_x* turn_speed_dt, lm::vec3(0,1,0));
+		camera.forward = R_yaw * camera.forward;
+		lm::vec3 pitch_axis = camera.forward.normalize().cross(lm::vec3(0,1,0));
+		R_pitch.makeRotationMatrix(mouse_.delta_y * turn_speed_dt, pitch_axis);
+		camera.forward = R_pitch * camera.forward;
+
+	}
+	lm::vec3 forward_dir = camera.forward.normalize() * move_speed_dt;
+	lm::vec3 strafe_dir = camera.forward.normalize().cross(lm::vec3(0,1,0)) * move_speed_dt;
+	if (input[GLFW_KEY_W] == true) {
+		transform.translate(forward_dir);
+	}
+	if (input[GLFW_KEY_S] == true) {
+		transform.translate(forward_dir * -1);
+	}
+	if (input[GLFW_KEY_A] == true) {
+		transform.translate(strafe_dir * -1);
+	}
+	if (input[GLFW_KEY_D] == true) {
+		transform.translate(strafe_dir);
 	}
 
 	//TODO:

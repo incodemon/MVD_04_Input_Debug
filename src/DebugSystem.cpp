@@ -45,12 +45,37 @@ void DebugSystem::update(float dt) {
 
         
     //TODO: draw grid
-       
+
+	glUseProgram(grid_shader_->program);
+	GLint u_mvp = glGetUniformLocation(grid_shader_->program, "u_mvp");
+	GLint u_color = glGetUniformLocation(grid_shader_->program, "u_color");
+	GLint u_color_mod = glGetUniformLocation(grid_shader_->program, "u_color_mod");
+
+	glUniformMatrix4fv(u_mvp,1, GL_FALSE, vp.m);
+	glUniform3fv(u_color,4, grid_colors);
+	glUniform1i(u_color_mod,0);
+	
+	glBindVertexArray(grid_vao_);
+	glDrawElements(GL_LINES, grid_num_indices, GL_UNSIGNED_INT, 0);
+
+
 
     auto& cameras = ECS.getAllComponents<Camera>();
     for (auto& cc : cameras) {
 
 		//TODO: draw camera frustum
+		lm::mat4 cam_ivp = cc.view_projection;
+		cam_ivp.inverse();
+
+		
+		lm::mat4 mvp = vp * cam_ivp;
+
+		glUniformMatrix4fv(u_mvp,1,GL_FALSE,mvp.m);
+		glUniform1i(u_color_mod,1);
+
+		glBindVertexArray(cube_vao_);
+		glDrawElements(GL_LINES, 24, GL_UNSIGNED_INT,0);
+
 
 
     }
@@ -60,6 +85,27 @@ void DebugSystem::update(float dt) {
         Transform& curr_light_transform = ECS.getComponentFromEntity<Transform>(curr_light.owner);
     
 		//TODO: draw light icons
+		//create light mvp using curr_ligt_transform
+		 
+		lm::mat4 mvpmatrix = vp * curr_light_transform;
+		//create the bill matrix by copying light mvp
+		lm::mat4 bill_matrix;
+		for (int i = 12; i < 16; i++)
+			bill_matrix.m[i] = mvpmatrix.m[i];
+		//and removing rotation
+
+		//activate icon_shader using glUseProgram
+		
+		//look at icon shader code in DebugSystem.h
+		
+		//find uniforms with glGetUniformLocation
+		//set uniforms for icon shader (u_mvp,u_icon)
+		//using glUniformxxxx
+		//set u_icon uniform to 0
+
+		//activate icon_light_texture - set to GL_TEXTURE0
+		//(look in graphics_system.renderMeshComponent
+		//to remind yourself of code)
 
     }
 
